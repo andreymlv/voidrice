@@ -1,0 +1,29 @@
+#!/bin/sh
+# Warning: add `tee` to sudoers.
+
+path="/sys/class/backlight/intel_backlight/brightness"
+val=$(cat $path)
+min=192 # 1%
+max=19200 # 100%
+percentage=$((val / min))
+scale=1
+
+if [ "$1" = "+" ]; then
+  val=$((min * (percentage + scale)))
+elif [ "$1" = "-" ]; then
+  val=$((min * (percentage - scale)))
+elif [ "$1" = "min" ]; then
+  val=$min
+else
+  val=$max
+fi
+
+percentage=$((val / min))
+if [ "$percentage" = "101" ]; then
+  printf '%d' 100
+elif [ "$percentage" = "0" ]; then
+  printf '%d' 1
+else
+  printf '%d' $percentage
+  printf '%d' $val | tee $path > /dev/null
+fi
